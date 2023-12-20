@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import java.time.LocalDate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,11 +24,14 @@ import org.hibernate.annotations.Where;
 @SQLDelete(sql = "UPDATE rentals SET is_deleted = true WHERE id = ?")
 public class Rental {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false)
+    @Temporal(TemporalType.DATE)
     private LocalDate rentalDate;
+    @Temporal(TemporalType.DATE)
     private LocalDate returnDate;
+    @Temporal(TemporalType.DATE)
     private LocalDate actualReturnDate;
     @ManyToOne
     @ToString.Exclude

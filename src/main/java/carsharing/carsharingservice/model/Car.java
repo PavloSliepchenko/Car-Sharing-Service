@@ -20,13 +20,13 @@ import org.hibernate.annotations.Where;
 @SQLDelete(sql = "UPDATE cars SET is_deleted = true WHERE id = ?")
 public class Car {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false)
     private String model;
     @Column(nullable = false)
     private String brand;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     @Enumerated(EnumType.STRING)
     private CarType type;
     @Column(nullable = false, unique = true)

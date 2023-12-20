@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-manager-user
+      author: PavloSliepchenko
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: "admin@user.com"
+              - column:
+                  name: first_name
+                  value: "Admin"
+              - column:
+                  name: last_name
+                  value: "User"
+              - column:
+                  name: password
+                  value: "$2a$10$31UQHFaHjd/pYeBiHzFmbeXUGXUTFpt2jRISc9mcR580vUPDzRrDi"
+              - column:
+                  name: role
+                  value: "MANAGER"
