@@ -1,19 +1,21 @@
 package carsharing.carsharingservice.dto.car;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import lombok.Data;
 
 @Data
 public class AddCarRequestDto {
-    @NotEmpty
+    @NotNull
     private String model;
-    @NotEmpty
+    @NotNull
     private String brand;
-    @NotEmpty
+    @NotNull
     private String type;
-    @NotEmpty
+    @NotNull
     private int inventory;
-    @NotEmpty
+    @NotNull
+    @Min(value = 0)
     private BigDecimal dailyFee;
 }
