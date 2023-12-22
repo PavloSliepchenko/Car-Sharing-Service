@@ -22,16 +22,21 @@ public class CarServiceImpl implements CarService {
     @Override
     public List<CarResponseDto> getAllCars(Pageable pageable) {
         return carRepository.findAll(pageable).stream()
+                .filter(e -> e.getInventory() > 0)
                 .map(carMapper::toDto)
                 .toList();
     }
 
     @Override
     public CarResponseDto saveCar(AddCarRequestDto requestDto) {
-        Optional<Car> carFromDb = carRepository.findByInventory(requestDto.getInventory());
-        if (carFromDb.isPresent()) {
-            throw new RuntimeException(String.format("Car with inventory %s already exists",
-                    requestDto.getInventory()));
+        Optional<Car> carOptional = carRepository.findByBrandAndModelAndType(
+                requestDto.getBrand(),
+                requestDto.getModel(),
+                Car.CarType.valueOf(requestDto.getType())
+        );
+        if (carOptional.isPresent()) {
+            throw new RuntimeException("This car has been added before. Car id "
+                    + carOptional.get().getId());
         }
         return carMapper.toDto(carRepository.save(carMapper.toModel(requestDto)));
     }

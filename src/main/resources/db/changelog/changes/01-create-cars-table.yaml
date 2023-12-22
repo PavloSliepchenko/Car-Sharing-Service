@@ -33,7 +33,6 @@ databaseChangeLog:
                   type: int
                   constraints:
                     nullable: false
-                    unique: true
               - column:
                   name: daily_fee
                   type: DECIMAL

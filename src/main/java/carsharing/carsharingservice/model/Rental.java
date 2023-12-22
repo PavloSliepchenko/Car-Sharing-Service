@@ -45,4 +45,6 @@ public class Rental {
     private User user;
     @Column(nullable = false)
     private boolean isDeleted = false;
+    @Column(nullable = false)
+    private boolean isActive = true;
 }
