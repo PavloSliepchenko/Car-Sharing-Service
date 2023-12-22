@@ -29,7 +29,7 @@ public class Car {
     @Column(nullable = false, columnDefinition = "VARCHAR(255)")
     @Enumerated(EnumType.STRING)
     private CarType type;
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private int inventory;
     private BigDecimal dailyFee;
     @Column(nullable = false)
