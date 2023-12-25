@@ -13,18 +13,21 @@ import carsharing.carsharingservice.model.Rental;
 import carsharing.carsharingservice.repository.CarRepository;
 import carsharing.carsharingservice.repository.RentalRepository;
 import carsharing.carsharingservice.repository.UserRepository;
+import carsharing.carsharingservice.service.NotificationService;
 import carsharing.carsharingservice.service.RentalService;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class RentalServiceImpl implements RentalService {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final NotificationService notificationService;
     private final RentalRepository rentalRepository;
     private final UserRepository userRepository;
     private final CarRepository carRepository;
@@ -78,7 +81,7 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public RentalResponseDto setActualReturnDate(Long userId, ActualReturnDateDto returnDateDto) {
-        Rental rental = rentalRepository.findByIdAndUserId(userId, returnDateDto.rentalId())
+        Rental rental = rentalRepository.findByIdAndUserId(returnDateDto.rentalId(), userId)
                 .orElseThrow(() -> new EntityNotFoundException("You don't have rental with id "
                         + returnDateDto.rentalId())
                 );
@@ -91,5 +94,16 @@ public class RentalServiceImpl implements RentalService {
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
         return rentalMapper.toDto(rentalRepository.save(rental));
+    }
+
+    @Scheduled(cron = "0 0 12 * * ?")
+    public void checkOverdueRentals() {
+        LocalDate today = LocalDate.now();
+        List<RentalResponseFullInfoDto> overdueRents = rentalRepository.findAllByActive(true)
+                .stream()
+                .filter(e -> e.getActualReturnDate() == null && e.getReturnDate().isBefore(today))
+                .map(rentalMapper::toFullInfoDto)
+                .toList();
+        notificationService.sendNotification(overdueRents);
     }
 }

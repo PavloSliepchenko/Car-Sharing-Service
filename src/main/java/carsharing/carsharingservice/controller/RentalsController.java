@@ -7,6 +7,7 @@ import carsharing.carsharingservice.dto.rental.RentalResponseDto;
 import carsharing.carsharingservice.dto.rental.RentalResponseFullInfoDto;
 import carsharing.carsharingservice.dto.rental.RentalSearchParametersDto;
 import carsharing.carsharingservice.model.User;
+import carsharing.carsharingservice.service.NotificationService;
 import carsharing.carsharingservice.service.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Rentals management", description = "Endpoints for CRUD operations with rentals")
 public class RentalsController {
     private final RentalService rentalService;
+    private final NotificationService notificationService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('CUSTOMER')")
@@ -37,7 +39,9 @@ public class RentalsController {
             @RequestBody @Valid CreateRentalRequestDto requestDto
     ) {
         User user = (User) authentication.getPrincipal();
-        return rentalService.addNewRental(user.getId(), requestDto);
+        RentalResponseDto responseDto = rentalService.addNewRental(user.getId(), requestDto);
+        notificationService.sendNotification(user.getId(), responseDto);
+        return responseDto;
     }
 
     @GetMapping()
