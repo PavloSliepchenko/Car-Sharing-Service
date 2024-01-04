@@ -7,6 +7,7 @@ import carsharing.carsharingservice.dto.rental.RentalResponseDto;
 import carsharing.carsharingservice.dto.rental.RentalResponseFullInfoDto;
 import carsharing.carsharingservice.dto.rental.RentalSearchParametersDto;
 import carsharing.carsharingservice.exception.EntityNotFoundException;
+import carsharing.carsharingservice.exception.RentalException;
 import carsharing.carsharingservice.mapper.RentalMapper;
 import carsharing.carsharingservice.model.Car;
 import carsharing.carsharingservice.model.Rental;
@@ -35,6 +36,11 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public RentalResponseDto addNewRental(Long userId, CreateRentalRequestDto requestDto) {
+        List<Rental> activeRental = rentalRepository.findByUserIdAndActive(userId, true);
+        if (activeRental.size() > 0) {
+            throw new RentalException("You have an active rental. "
+                    + "You can't have more than one rental");
+        }
         Optional<Car> carOptional = carRepository.findById(requestDto.getCarId());
         if (carOptional.isEmpty()) {
             throw new EntityNotFoundException("There is no car with id " + requestDto.getCarId());
@@ -42,11 +48,11 @@ public class RentalServiceImpl implements RentalService {
         LocalDate currentDate = LocalDate.now();
         LocalDate rentalDate = LocalDate.parse(requestDto.getRentalDate(), formatter);
         if (rentalDate.isBefore(currentDate)) {
-            throw new RuntimeException("Rental date cannot be before current date");
+            throw new RentalException("Rental date cannot be before current date");
         }
         Car car = carOptional.get();
         if (car.getInventory() == 0) {
-            throw new RuntimeException(String.format("Car %s is not available at the moment",
+            throw new RentalException(String.format("Car %s is not available at the moment",
                     car.getModel()));
         }
         car.setInventory(car.getInventory() - 1);
