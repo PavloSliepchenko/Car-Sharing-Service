@@ -1,5 +1,6 @@
 package carsharing.carsharingservice.service.impl;
 
+import carsharing.carsharingservice.dto.payment.CreatePaymentRequestDto;
 import carsharing.carsharingservice.dto.rental.ActualReturnDateDto;
 import carsharing.carsharingservice.dto.rental.CreateRentalRequestDto;
 import carsharing.carsharingservice.dto.rental.RentalActiveStatusDto;
@@ -10,11 +11,14 @@ import carsharing.carsharingservice.exception.EntityNotFoundException;
 import carsharing.carsharingservice.exception.RentalException;
 import carsharing.carsharingservice.mapper.RentalMapper;
 import carsharing.carsharingservice.model.Car;
+import carsharing.carsharingservice.model.Payment;
 import carsharing.carsharingservice.model.Rental;
 import carsharing.carsharingservice.repository.CarRepository;
+import carsharing.carsharingservice.repository.PaymentRepository;
 import carsharing.carsharingservice.repository.RentalRepository;
 import carsharing.carsharingservice.repository.UserRepository;
 import carsharing.carsharingservice.service.NotificationService;
+import carsharing.carsharingservice.service.PaymentService;
 import carsharing.carsharingservice.service.RentalService;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,9 +31,12 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class RentalServiceImpl implements RentalService {
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Payment.Status PENDING = Payment.Status.PENDING;
     private final NotificationService notificationService;
+    private final PaymentRepository paymentRepository;
     private final RentalRepository rentalRepository;
+    private final PaymentService paymentService;
     private final UserRepository userRepository;
     private final CarRepository carRepository;
     private final RentalMapper rentalMapper;
@@ -41,12 +48,20 @@ public class RentalServiceImpl implements RentalService {
             throw new RentalException("You have an active rental. "
                     + "You can't have more than one rental");
         }
+
         Optional<Car> carOptional = carRepository.findById(requestDto.getCarId());
         if (carOptional.isEmpty()) {
             throw new EntityNotFoundException("There is no car with id " + requestDto.getCarId());
         }
+
+        List<Payment> pendingPayments = paymentRepository.findByUserIdAndStatus(userId, PENDING);
+        if (!pendingPayments.isEmpty()) {
+            throw new RentalException("You have pending payments. Please pay it first. Rental id "
+                    + pendingPayments.get(0).getRental().getId());
+        }
+
         LocalDate currentDate = LocalDate.now();
-        LocalDate rentalDate = LocalDate.parse(requestDto.getRentalDate(), formatter);
+        LocalDate rentalDate = LocalDate.parse(requestDto.getRentalDate(), FORMATTER);
         if (rentalDate.isBefore(currentDate)) {
             throw new RentalException("Rental date cannot be before current date");
         }
@@ -99,6 +114,7 @@ public class RentalServiceImpl implements RentalService {
         Car car = rental.getCar();
         car.setInventory(car.getInventory() + 1);
         carRepository.save(car);
+        payForRental(rental);
         return rentalMapper.toDto(rentalRepository.save(rental));
     }
 
@@ -111,5 +127,14 @@ public class RentalServiceImpl implements RentalService {
                 .map(rentalMapper::toFullInfoDto)
                 .toList();
         notificationService.sendNotification(overdueRents);
+    }
+
+    private void payForRental(Rental rental) {
+        paymentService.setPayment(new CreatePaymentRequestDto(rental.getId(),
+                Payment.Type.PAYMENT.name()));
+        if (rental.getActualReturnDate().isAfter(rental.getReturnDate())) {
+            paymentService.setPayment(new CreatePaymentRequestDto(rental.getId(),
+                    Payment.Type.FINE.name()));
+        }
     }
 }

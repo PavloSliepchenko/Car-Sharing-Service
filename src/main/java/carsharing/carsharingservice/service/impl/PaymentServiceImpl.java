@@ -2,6 +2,7 @@ package carsharing.carsharingservice.service.impl;
 
 import carsharing.carsharingservice.dto.payment.CreatePaymentRequestDto;
 import carsharing.carsharingservice.dto.payment.PaymentResponseDto;
+import carsharing.carsharingservice.dto.payment.PaymentResponseFullInfoDto;
 import carsharing.carsharingservice.exception.PaymentException;
 import carsharing.carsharingservice.mapper.PaymentMapper;
 import carsharing.carsharingservice.model.Payment;
@@ -36,7 +37,6 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String STIPE_SECRET_KEY = Dotenv.load().get("STRIPE_SECRET_KEY");
     private static final Payment.Status DEFAULT_PAYMENT_STATUS = Payment.Status.PENDING;
     private static final BigDecimal FINE_MULTIPLIER = BigDecimal.valueOf(1.5);
-    private static final Payment.Status CANCELED = Payment.Status.CANCELED;
     private static final Payment.Type PAYMENT = Payment.Type.PAYMENT;
     private static final Payment.Type FINE = Payment.Type.FINE;
     private final PaymentRepository paymentRepository;
@@ -56,7 +56,6 @@ public class PaymentServiceImpl implements PaymentService {
         Payment.Type typeOfPayment = Payment.Type.valueOf(requestDto.paymentType());
         Optional<Payment> paymentOptional = paymentRepository.findByRentalIdAndType(
                 requestDto.rentalId(), typeOfPayment).stream()
-                .filter(e -> e.getStatus() != CANCELED)
                 .findFirst();
 
         if (paymentOptional.isEmpty()) {
@@ -104,13 +103,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void updatePaymentStatus(String sessionId, Payment.Status status) {
+    public PaymentResponseFullInfoDto updatePaymentStatus(String sessionId, Payment.Status status) {
         Optional<Payment> paymentOptional = paymentRepository.findBySessionId(sessionId);
         if (paymentOptional.isPresent()) {
             Payment payment = paymentOptional.get();
             payment.setStatus(status);
-            paymentRepository.save(payment);
+            return paymentMapper.toFullInfoDto(paymentRepository.save(payment));
         }
+        throw new PaymentException("No payments were found with session id " + sessionId);
     }
 
     private Rental getRentalById(Long rentalId) {
@@ -122,6 +122,9 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private int getNumberOfDaysRent(Rental rental) {
+        if (rental.getRentalDate().isEqual(rental.getActualReturnDate())) {
+            return 1;
+        }
         if (rental.getRentalDate().getYear() - rental.getActualReturnDate().getYear() < 0) {
             LocalDate dec31 = LocalDate.of(rental.getRentalDate().getYear(), Month.DECEMBER, 31);
             int daysUsedPreviousYear = dec31.getDayOfYear() - rental.getRentalDate().getDayOfYear();

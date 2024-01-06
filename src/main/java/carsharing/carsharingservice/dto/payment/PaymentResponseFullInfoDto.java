@@ -7,9 +7,8 @@ import lombok.Data;
 @Data
 public class PaymentResponseFullInfoDto {
     private Long id;
-    private String status;
     private String type;
-    private String sessionId;
+    private Long userId;
     private BigDecimal amount;
     private RentalResponseDto rental;
 }

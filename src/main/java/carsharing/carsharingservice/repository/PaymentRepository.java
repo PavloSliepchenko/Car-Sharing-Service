@@ -17,4 +17,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByRentalIdAndType(Long rentalId, Payment.Type type);
 
     Optional<Payment> findBySessionId(String sessionId);
+
+    @Query(value = "SELECT p "
+            + "FROM Payment p "
+            + "JOIN p.rental r "
+            + "JOIN r.user u "
+            + "WHERE u.id = :userId AND p.status = :status")
+    List<Payment> findByUserIdAndStatus(Long userId, Payment.Status status);
 }
