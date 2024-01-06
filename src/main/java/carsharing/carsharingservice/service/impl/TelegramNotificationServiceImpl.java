@@ -1,5 +1,6 @@
 package carsharing.carsharingservice.service.impl;
 
+import carsharing.carsharingservice.dto.payment.PaymentResponseFullInfoDto;
 import carsharing.carsharingservice.dto.rental.RentalResponseDto;
 import carsharing.carsharingservice.dto.rental.RentalResponseFullInfoDto;
 import carsharing.carsharingservice.service.NotificationService;
@@ -60,6 +61,21 @@ public class TelegramNotificationServiceImpl implements NotificationService {
                     overdueRent.getCar().getModel(), overdueRent.getCar().getBrand());
             sendMessage(message);
         }
+    }
+
+    @Override
+    public void sendNotification(PaymentResponseFullInfoDto responseDto) {
+        String message = String.format("""
+                        New payment!
+                        User id: %s
+                        Rental id: %s
+                        Car id: %s
+                        Amount: $%s
+                        Payment type: %s
+                        """, responseDto.getUserId(), responseDto.getRental().getId(),
+                responseDto.getRental().getCar().getId(),
+                responseDto.getAmount(), responseDto.getType());
+        sendMessage(message);
     }
 
     private void sendMessage(String message) {

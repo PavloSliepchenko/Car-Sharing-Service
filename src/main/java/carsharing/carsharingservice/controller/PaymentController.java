@@ -2,7 +2,9 @@ package carsharing.carsharingservice.controller;
 
 import carsharing.carsharingservice.dto.payment.CreatePaymentRequestDto;
 import carsharing.carsharingservice.dto.payment.PaymentResponseDto;
+import carsharing.carsharingservice.dto.payment.PaymentResponseFullInfoDto;
 import carsharing.carsharingservice.model.Payment;
+import carsharing.carsharingservice.service.NotificationService;
 import carsharing.carsharingservice.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/payments")
 @Tag(name = "Payments management", description = "End points for CRUD operations with payments")
 public class PaymentController {
+    private final NotificationService notificationService;
     private final PaymentService paymentService;
 
     @GetMapping(value = "/{userId}")
@@ -41,9 +44,12 @@ public class PaymentController {
     @GetMapping(value = "/success")
     @PreAuthorize("hasAuthority('CUSTOMER')")
     @Operation(summary = "Success endpoint", description = "Endpoint for redirection in case of "
-            + "successful payment operation")
+            + "successful payment operation. Updates payment status to 'PAID' "
+            + "and sends a notification to telegram chat")
     public String success(@RequestParam("session_id") String sessionId) {
-        paymentService.updatePaymentStatus(sessionId, Payment.Status.PAID);
+        PaymentResponseFullInfoDto responseDto =
+                paymentService.updatePaymentStatus(sessionId, Payment.Status.PAID);
+        notificationService.sendNotification(responseDto);
         return "success";
     }
 
@@ -52,7 +58,6 @@ public class PaymentController {
     @Operation(summary = "Cancel endpoint", description = "Endpoint for redirection in case of "
             + "payment cancellation")
     public String cancel(@RequestParam("session_id") String sessionId) {
-        paymentService.updatePaymentStatus(sessionId, Payment.Status.CANCELED);
-        return "cancel";
+        return "canceled";
     }
 }

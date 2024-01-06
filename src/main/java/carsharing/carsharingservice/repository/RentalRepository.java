@@ -19,4 +19,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
             + "FROM Rental r "
             + "WHERE r.isActive = :active")
     List<Rental> findAllByActive(boolean active);
+
+    List<Rental> findByUserId(Long userId);
 }

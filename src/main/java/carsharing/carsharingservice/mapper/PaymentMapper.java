@@ -16,18 +16,18 @@ public interface PaymentMapper {
     @Mapping(target = "type", ignore = true)
     PaymentResponseDto toDto(Payment payment);
 
-    PaymentResponseFullInfoDto toFullInfoDto(Payment payment);
-
     @AfterMapping
     default void setStatusAndType(@MappingTarget PaymentResponseDto responseDto, Payment payment) {
         responseDto.setType(payment.getType().name());
         responseDto.setStatus(payment.getStatus().name());
     }
 
+    PaymentResponseFullInfoDto toFullInfoDto(Payment payment);
+
     @AfterMapping
-    default void setStatusAndType(@MappingTarget PaymentResponseFullInfoDto responseDto,
+    default void setUserIdAndType(@MappingTarget PaymentResponseFullInfoDto responseDto,
                                   Payment payment) {
         responseDto.setType(payment.getType().name());
-        responseDto.setStatus(payment.getStatus().name());
+        responseDto.setUserId(payment.getRental().getUser().getId());
     }
 }
