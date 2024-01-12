@@ -65,7 +65,7 @@ Please note that endpoints with POST, PUT and PATCH methods require JSON body as
 # Examples
 ## Register
 To register your customers will need to use their email, make up a password, user their name and surname. Email must be unique. Please see an example below.
-![Register a new user](https://drive.google.com/uc?export=view&id=ENUpY2Ea9hzoNkYGK4OlhxXJw6x)
+![Register a new user](https://drive.google.com/uc?export=view&id=1U0B--ENUpY2Ea9hzoNkYGK4OlhxXJw6x)
 ## Add a new car
 To add a new car you will need to log in as admin user and use and authentication token to get access to endpoint. Then you will have to mention car's model, brand, type, inventory and a daily fee. Please see an example below.
 ![Add a new car](https://drive.google.com/uc?export=view&id=1r0YMFyovEkOdgWKv8E7_QBJBdzD-0VPW)
