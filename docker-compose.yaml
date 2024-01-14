@@ -8,6 +8,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=$MYSQLDB_ROOT_PASSWORD
       - MYSQL_DATABASE=$MYSQLDB_DATABASE
+      - MYSQL_SESSION_VARIABLES=sql_mode='NO_ENGINE_SUBSTITUTION',jdbcCompliantTruncation=false
     ports:
       - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
   app:
@@ -20,9 +21,7 @@ services:
       - $SPRING_LOCAL_PORT:$SPRING_DOCKER_PORT
       - $DEBUG_PORT:$DEBUG_PORT
     environment:
-      SPRING_APPLICATION_JSON: '{
-        "spring.datasource.url" : "jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE",
-        "spring.datasource.username" : "$MYSQLDB_USER",
-        "spring.datasource.password" : "$MYSQLDB_ROOT_PASSWORD",
-        "spring.jpa.hibernate.ddl-auto" : "validate"
-      }'
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:$MYSQLDB_DOCKER_PORT/$MYSQLDB_DATABASE?sessionVariables=sql_mode='NO_ENGINE_SUBSTITUTION'&jdbcCompliantTruncation=false
+      SPRING_DATASOURCE_USERNAME: $MYSQLDB_USER
+      SPRING_DATASOURCE_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate

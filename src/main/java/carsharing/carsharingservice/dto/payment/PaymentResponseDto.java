@@ -11,4 +11,5 @@ public class PaymentResponseDto {
     private Long rentalId;
     private String sessionId;
     private BigDecimal amount;
+    private String description;
 }
