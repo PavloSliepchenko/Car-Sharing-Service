@@ -5,8 +5,8 @@ COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
 FROM openjdk:20-jdk
-WORKDIR application
-COPY .env /
+WORKDIR /application
+COPY .env /application/
 COPY --from=builder application/dependencies/ ./
 COPY --from=builder application/spring-boot-loader/ ./
 COPY --from=builder application/snapshot-dependencies/ ./

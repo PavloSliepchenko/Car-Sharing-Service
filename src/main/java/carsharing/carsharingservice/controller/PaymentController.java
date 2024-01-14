@@ -37,8 +37,8 @@ public class PaymentController {
     @PostMapping
     @PreAuthorize("hasAuthority('CUSTOMER')")
     @Operation(summary = "To pay", description = "Set payment for certain rental")
-    public void setPayment(@RequestBody CreatePaymentRequestDto requestDto) {
-        paymentService.setPayment(requestDto);
+    public PaymentResponseDto setPayment(@RequestBody CreatePaymentRequestDto requestDto) {
+        return paymentService.setPayment(requestDto);
     }
 
     @GetMapping(value = "/success")

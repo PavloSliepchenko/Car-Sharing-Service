@@ -30,10 +30,11 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+    private static final String SUCCESS = "Success";
     private static final String SUCCESS_URL =
-            "http://localhost:8080/payments/success?session_id={CHECKOUT_SESSION_ID}";
+            "http://localhost:8081/payments/success?session_id={CHECKOUT_SESSION_ID}";
     private static final String CANCEL_URL =
-            "http://localhost:8080/payments/cancel?session_id={CHECKOUT_SESSION_ID}";
+            "http://localhost:8081/payments/cancel?session_id={CHECKOUT_SESSION_ID}";
     private static final String STIPE_SECRET_KEY = Dotenv.load().get("STRIPE_SECRET_KEY");
     private static final Payment.Status DEFAULT_PAYMENT_STATUS = Payment.Status.PENDING;
     private static final BigDecimal FINE_MULTIPLIER = BigDecimal.valueOf(1.5);
@@ -69,11 +70,13 @@ public class PaymentServiceImpl implements PaymentService {
                             .multiply(FINE_MULTIPLIER);
 
             Session session = createSession(amountToPay, typeOfPayment);
+            String description = null;
+            URI checkoutUri = null;
             try {
-                URI checkoutUri = new URI(session.getUrl());
-                openUrlInBrowser(checkoutUri);
+                checkoutUri = new URI(session.getUrl());
+                description = openUrlInBrowser(checkoutUri);
             } catch (Exception e) {
-                throw new PaymentException("Failed to open Stripe checkout page", e);
+                description = "You can finish the payment following the link: " + checkoutUri;
             }
 
             Payment payment = new Payment();
@@ -87,14 +90,18 @@ public class PaymentServiceImpl implements PaymentService {
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
-            return paymentMapper.toDto(paymentRepository.save(payment));
+            PaymentResponseDto responseDto = paymentMapper.toDto(paymentRepository.save(payment));
+            responseDto.setDescription(description);
+            return responseDto;
         } else if (paymentOptional.get().getSessionId() != null
                 && paymentOptional.get().getStatus() == DEFAULT_PAYMENT_STATUS) {
             Stripe.apiKey = STIPE_SECRET_KEY;
             try {
                 Session session = Session.retrieve(paymentOptional.get().getSessionId());
-                openUrlInBrowser(new URI(session.getUrl()));
-                return paymentMapper.toDto(paymentOptional.get());
+                String description = openUrlInBrowser(new URI(session.getUrl()));
+                PaymentResponseDto responseDto = paymentMapper.toDto(paymentOptional.get());
+                responseDto.setDescription(description);
+                return responseDto;
             } catch (StripeException | URISyntaxException e) {
                 throw new PaymentException("Failed to retrieve session", e);
             }
@@ -178,7 +185,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private void openUrlInBrowser(URI uri) {
+    private String openUrlInBrowser(URI uri) {
         String[] browsers = {"google-chrome", "firefox", "opera", "epiphany",
                 "konqueror", "mozilla", "netscape", "xdg-open"};
         try {
@@ -186,8 +193,10 @@ public class PaymentServiceImpl implements PaymentService {
             Runtime runtime = Runtime.getRuntime();
             if (os.contains("win")) {
                 runtime.exec("rundll32 url.dll,FileProtocolHandler " + uri.toString());
+                return SUCCESS;
             } else if (os.contains("mac")) {
                 runtime.exec("open " + uri.toString());
+                return SUCCESS;
             } else if (os.contains("nix") || os.contains("nux")) {
                 for (String browser : browsers) {
                     if (runtime.exec(new String[]{browser, uri.toString()}) == null) {
@@ -195,12 +204,13 @@ public class PaymentServiceImpl implements PaymentService {
                     }
                     break;
                 }
+                return SUCCESS;
             } else {
-                throw new UnsupportedOperationException("Unsupported operating system");
+                return "You can finish the payment following the link: " + uri;
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to open URL in browser", e);
+            return "You can finish the payment following the link: " + uri;
         }
     }
 }
