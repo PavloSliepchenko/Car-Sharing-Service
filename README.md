@@ -1,4 +1,4 @@
-# CAR SHARING API
+# 🚘 CAR SHARING API 🚘
 ## Description
 This API allows your customers to register, login, check available cars, rent a car, pay for rented cars. Admin will receive telegram notifications about new rentals and payments; every day at 12pm API will check all overdue rentals and send a notification to telegram about them with full info.
 
@@ -72,6 +72,9 @@ To add a new car you will need to log in as admin user and use and authenticatio
 ## Get rentals by status
 To get rentals by status you will need to log in as admin user and use true/false as parameter. 'true' - still active. 'false' - returned.
 ![Get rentals by status](https://drive.google.com/uc?export=view&id=1EkWmPXaHrM16FoTfYRfn4iuu5rgD_cK5)
+## Pay for rental
+To pay for rental your customers will have to mention the rental id and type of payment. After sending the request they will receive the response body with the payment details and a link for completing the payment.
+![Pay for rental](https://drive.google.com/uc?export=view&id=1RDCt3WkkvySSqDF-yIdSLZVQuVxhb0IP)
 ## Get payments by user id
 To get rentals by status you will need to log in as admin user and use user id
 ![Get payments by user id](https://drive.google.com/uc?export=view&id=1uIa7dyWPm7r0mAbVg4FOKmmjbN6uSfbT)
