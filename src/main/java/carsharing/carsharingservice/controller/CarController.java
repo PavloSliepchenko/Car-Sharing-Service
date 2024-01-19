@@ -54,7 +54,8 @@ public class CarController {
     @PreAuthorize("hasAuthority('MANAGER')")
     @Operation(summary = "Update a car info",
             description = "Updates all car's info with certain id")
-    public CarResponseDto updateCar(@PathVariable Long id, @Valid AddCarRequestDto requestDto) {
+    public CarResponseDto updateCar(@PathVariable Long id,
+                                    @Valid @RequestBody AddCarRequestDto requestDto) {
         return carService.updateCar(id, requestDto);
     }
 

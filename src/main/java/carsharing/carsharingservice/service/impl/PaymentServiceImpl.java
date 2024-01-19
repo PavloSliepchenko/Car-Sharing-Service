@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private static final String SUCCESS = "Success";
+    private static final String FINISH_PAYMENT = "You can finish the payment following the link: ";
     private static final String SUCCESS_URL =
             "http://localhost:8081/payments/success?session_id={CHECKOUT_SESSION_ID}";
     private static final String CANCEL_URL =
@@ -76,7 +77,7 @@ public class PaymentServiceImpl implements PaymentService {
                 checkoutUri = new URI(session.getUrl());
                 description = openUrlInBrowser(checkoutUri);
             } catch (Exception e) {
-                description = "You can finish the payment following the link: " + checkoutUri;
+                description = FINISH_PAYMENT + checkoutUri;
             }
 
             Payment payment = new Payment();
@@ -206,11 +207,11 @@ public class PaymentServiceImpl implements PaymentService {
                 }
                 return SUCCESS;
             } else {
-                return "You can finish the payment following the link: " + uri;
+                return FINISH_PAYMENT + uri;
             }
 
         } catch (Exception e) {
-            return "You can finish the payment following the link: " + uri;
+            return FINISH_PAYMENT + uri;
         }
     }
 }
